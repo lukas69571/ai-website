@@ -1,0 +1,18 @@
+[
+    {
+        "file": "index.html",
+        "name": "Home",
+        "title": "Start – Lukas",
+        "description": "Startseite der automatisierten Website",
+        "headline": "Willkommen",
+        "content": "Dies ist die Startseite."
+    },
+    {
+        "file": "about.html",
+        "name": "Über mich",
+        "title": "Über – Lukas",
+        "description": "Über diese Website",
+        "headline": "Über dieses Projekt",
+        "content": "Automatisiert aufgebaut. Systematisch skalierbar."
+    }
+]

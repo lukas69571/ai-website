@@ -1,0 +1,19 @@
+{
+    "title": "Lukas – Automatisierte Website",
+    "description": "Skalierbare Website mit automatisierter Content-Pipeline",
+    "hero": {
+        "headline": "Website MVP",
+        "subline": "Automatisch generiert. Systematisch skalierbar."
+    },
+    "sections": [
+        {
+            "title": "Status",
+            "text": "Diese Website wird vollständig über eine Content-Pipeline gesteuert."
+        },
+        {
+            "title": "Nächster Schritt",
+            "text": "Templates, Deployment und QA folgen."
+        }
+    ],
+    "footer": "© 2025 Lukas"
+}
