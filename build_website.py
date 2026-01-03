@@ -1217,3 +1217,269 @@ if __name__ == "__main__":
     build_saas_placeholders(BASE_PATH)
 
     run_qa(BASE_PATH)
+<form method="POST" action="/lead">
+    <input type="text" name="name" placeholder="Name" required>
+    <input type="email" name="email" placeholder="E-Mail" required>
+
+    <!-- Tracking -->
+    <input type="hidden" name="source_page" value="{{PAGE_SLUG}}">
+    <input type="hidden" name="campaign" value="{{CAMPAIGN}}">
+    <input type="hidden" name="timestamp" value="{{TIMESTAMP}}">
+
+    <button type="submit">Anfrage senden</button>
+</form>
+from datetime import datetime
+
+def render_form(slug):
+    return f"""
+<form method="POST" action="/lead">
+    <input type="text" name="name" placeholder="Name" required>
+    <input type="email" name="email" placeholder="E-Mail" required>
+
+    <input type="hidden" name="source_page" value="{slug}">
+    <input type="hidden" name="campaign" value="organic">
+    <input type="hidden" name="timestamp" value="{datetime.utcnow().isoformat()}">
+
+    <button class="cta" type="submit">Anfrage senden</button>
+</form>
+"""
+<section class="cta-final">
+    {render_form(slug)}
+</section>
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import parse_qs
+from pathlib import Path
+import json
+import csv
+from datetime import datetime
+
+BASE = Path("leads")
+BASE.mkdir(exist_ok=True)
+
+CSV_FILE = BASE / "leads.csv"
+JSON_FILE = BASE / "leads.json"
+
+class LeadHandler(BaseHTTPRequestHandler):
+    def do_POST(self):
+        if self.path != "/lead":
+            self.send_response(404)
+            self.end_headers()
+            return
+
+        length = int(self.headers["Content-Length"])
+        body = self.rfile.read(length).decode()
+        data = {k: v[0] for k, v in parse_qs(body).items()}
+        data["received_at"] = datetime.utcnow().isoformat()
+
+        # CSV
+        file_exists = CSV_FILE.exists()
+        with CSV_FILE.open("a", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=data.keys())
+            if not file_exists:
+                writer.writeheader()
+            writer.writerow(data)
+
+        # JSON
+        leads = []
+        if JSON_FILE.exists():
+            leads = json.loads(JSON_FILE.read_text(encoding="utf-8"))
+        leads.append(data)
+        JSON_FILE.write_text(json.dumps(leads, indent=2), encoding="utf-8")
+
+        self.send_response(302)
+        self.send_header("Location", "/danke")
+        self.end_headers()
+
+if __name__ == "__main__":
+    HTTPServer(("localhost", 8000), LeadHandler).serve_forever()
+def build_thankyou_page(base_path):
+    path = base_path / "danke"
+    path.mkdir(parents=True, exist_ok=True)
+    (path / "index.html").write_text("""
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <title>Danke für deine Anfrage</title>
+</head>
+<body>
+<h1>Anfrage erhalten</h1>
+<p>Wir melden uns zeitnah.</p>
+</body>
+</html>
+""", encoding="utf-8")
+import json
+import csv
+import smtplib
+from email.message import EmailMessage
+from pathlib import Path
+import requests
+
+# Basisordner für Leads
+LEAD_PATH = Path("leads")
+LEAD_PATH.mkdir(exist_ok=True)
+CSV_FILE = LEAD_PATH / "leads.csv"
+JSON_FILE = LEAD_PATH / "leads.json"
+
+# Beispiel: Mail-Benachrichtigung
+SMTP_SERVER = "smtp.example.com"
+SMTP_PORT = 587
+SMTP_USER = "dein@email.com"
+SMTP_PASS = "PASSWORT"
+
+def send_email_notification(lead):
+    msg = EmailMessage()
+    msg['Subject'] = f"Neuer Lead: {lead['name']}"
+    msg['From'] = SMTP_USER
+    msg['To'] = "sales@deinefirma.de"
+    msg.set_content(f"Neuer Lead:\nName: {lead['name']}\nEmail: {lead['email']}\nSeite: {lead['source_page']}\nZeit: {lead['received_at']}")
+
+    with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as smtp:
+        smtp.starttls()
+        smtp.login(SMTP_USER, SMTP_PASS)
+        smtp.send_message(msg)
+
+# Beispiel: Push in CRM via API (hier Pseudo-Code)
+CRM_API_URL = "https://api.mailerlite.com/api/v2/subscribers"
+CRM_API_KEY = "DEIN_API_KEY"
+
+def push_to_crm(lead):
+    headers = {"Content-Type": "application/json", "X-MailerLite-ApiKey": CRM_API_KEY}
+    data = {"email": lead["email"], "name": lead["name"], "fields": {"source_page": lead["source_page"]}}
+    response = requests.post(CRM_API_URL, headers=headers, json=data)
+    return response.status_code
+
+# Lead verarbeiten
+def process_new_leads():
+    if not JSON_FILE.exists():
+        return
+
+    leads = json.loads(JSON_FILE.read_text(encoding="utf-8"))
+    for lead in leads:
+        try:
+            send_email_notification(lead)
+        except Exception as e:
+            print(f"⚠️ E-Mail-Benachrichtigung fehlgeschlagen: {e}")
+        try:
+            status = push_to_crm(lead)
+            if status == 200 or status == 201:
+                print(f"✅ Lead {lead['email']} an CRM gesendet.")
+            else:
+                print(f"⚠️ CRM Push fehlgeschlagen: {status}")
+        except Exception as e:
+            print(f"⚠️ CRM Push Exception: {e}")
+# In lead_server.py nach Speicherung
+process_new_leads()
+# =====================================================
+# AI-FABRIK – Lead Server + CRM + E-Mail Automation
+# Phase 5 + 7 kombiniert
+# =====================================================
+
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import parse_qs
+from pathlib import Path
+import json
+import csv
+from datetime import datetime
+import smtplib
+from email.message import EmailMessage
+import requests
+
+# ================== Konfiguration ==================
+BASE = Path("leads")
+BASE.mkdir(exist_ok=True)
+
+CSV_FILE = BASE / "leads.csv"
+JSON_FILE = BASE / "leads.json"
+
+# E-Mail
+SMTP_SERVER = "smtp.example.com"
+SMTP_PORT = 587
+SMTP_USER = "dein@email.com"
+SMTP_PASS = "PASSWORT"
+EMAIL_TARGET = "sales@deinefirma.de"
+
+# CRM
+CRM_API_URL = "https://api.mailerlite.com/api/v2/subscribers"
+CRM_API_KEY = "DEIN_API_KEY"
+
+# ================== Helper-Funktionen ==================
+def send_email_notification(lead):
+    msg = EmailMessage()
+    msg['Subject'] = f"Neuer Lead: {lead['name']}"
+    msg['From'] = SMTP_USER
+    msg['To'] = EMAIL_TARGET
+    msg.set_content(
+        f"Neuer Lead:\n"
+        f"Name: {lead['name']}\n"
+        f"Email: {lead['email']}\n"
+        f"Seite: {lead['source_page']}\n"
+        f"Zeit: {lead['received_at']}"
+    )
+    with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as smtp:
+        smtp.starttls()
+        smtp.login(SMTP_USER, SMTP_PASS)
+        smtp.send_message(msg)
+
+def push_to_crm(lead):
+    headers = {"Content-Type": "application/json", "X-MailerLite-ApiKey": CRM_API_KEY}
+    data = {"email": lead["email"], "name": lead["name"], "fields": {"source_page": lead["source_page"]}}
+    response = requests.post(CRM_API_URL, headers=headers, json=data)
+    return response.status_code
+
+def process_new_lead(lead):
+    # CSV speichern
+    file_exists = CSV_FILE.exists()
+    with CSV_FILE.open("a", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=lead.keys())
+        if not file_exists:
+            writer.writeheader()
+        writer.writerow(lead)
+
+    # JSON speichern
+    leads = []
+    if JSON_FILE.exists():
+        leads = json.loads(JSON_FILE.read_text(encoding="utf-8"))
+    leads.append(lead)
+    JSON_FILE.write_text(json.dumps(leads, indent=2), encoding="utf-8")
+
+    # E-Mail & CRM
+    try:
+        send_email_notification(lead)
+        print(f"✅ E-Mail an {EMAIL_TARGET} gesendet.")
+    except Exception as e:
+        print(f"⚠️ E-Mail Versand fehlgeschlagen: {e}")
+
+    try:
+        status = push_to_crm(lead)
+        if status in [200, 201]:
+            print(f"✅ Lead {lead['email']} an CRM gesendet.")
+        else:
+            print(f"⚠️ CRM Push fehlgeschlagen: Status {status}")
+    except Exception as e:
+        print(f"⚠️ CRM Push Exception: {e}")
+
+# ================== HTTP Server ==================
+class LeadHandler(BaseHTTPRequestHandler):
+    def do_POST(self):
+        if self.path != "/lead":
+            self.send_response(404)
+            self.end_headers()
+            return
+
+        length = int(self.headers["Content-Length"])
+        body = self.rfile.read(length).decode()
+        data = {k: v[0] for k, v in parse_qs(body).items()}
+        data["received_at"] = datetime.utcnow().isoformat()
+
+        # Lead verarbeiten
+        process_new_lead(data)
+
+        # Weiterleitung zur Danke-Seite
+        self.send_response(302)
+        self.send_header("Location", "/danke")
+        self.end_headers()
+
+# ================== Server starten ==================
+if __name__ == "__main__":
+    print("🚀 Lead Server läuft auf http://localhost:8000")
+    HTTPServer(("localhost", 8000), LeadHandler).serve_forever()
