@@ -1,0 +1,20 @@
+﻿[
+    {
+        "slug": "index",
+        "title": "AI Solutions – Startseite",
+        "description": "Willkommen auf AI Solutions.",
+        "body": "<h2>Willkommen</h2><p>Automatisierte Website für AI Solutions.</p>"
+    },
+    {
+        "slug": "services",
+        "title": "Leistungen",
+        "description": "Unsere Services",
+        "body": "<ul><li>KI-Agenten</li><li>Video-Automation</li><li>Websites</li></ul>"
+    },
+    {
+        "slug": "contact",
+        "title": "Kontakt",
+        "description": "Kontaktieren Sie uns",
+        "body": "<p>Email: contact@example.com</p>"
+    }
+]

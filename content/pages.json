@@ -1,0 +1,20 @@
+﻿[
+    {
+        "slug": "index",
+        "title": "KI-Agenten & Automatisierung",
+        "description": "Skalierbare KI-Systeme für Content, Websites und SaaS.",
+        "body": "<h2>Willkommen</h2><p>Automatisierung. Skalierung. Qualität.</p>"
+    },
+    {
+        "slug": "services",
+        "title": "Leistungen",
+        "description": "Unsere KI-Services im Überblick.",
+        "body": "<ul><li>KI-Agenten</li><li>Video-Automation</li><li>Websites</li></ul>"
+    },
+    {
+        "slug": "contact",
+        "title": "Kontakt",
+        "description": "Kontaktieren Sie uns.",
+        "body": "<p>Email: contact@example.com</p>"
+    }
+]
